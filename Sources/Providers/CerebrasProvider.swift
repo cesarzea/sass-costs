@@ -39,4 +39,3 @@ private struct CerebrasUsage: Codable {
         case totalCost = "total_cost"
     }
 }
-}

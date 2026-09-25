@@ -39,4 +39,3 @@ private struct GrokUsage: Codable {
         case totalCost = "total_cost"
     }
 }
-}

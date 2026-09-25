@@ -39,4 +39,3 @@ private struct GroqUsage: Codable {
         case totalCost = "total_cost"
     }
 }
-}
