@@ -16,7 +16,7 @@ Costs refresh on launch, every hour, and on *Refresh Now* (⌘R).
 |----------|-------|-------------|
 | Anthropic | ✅ `GET /v1/organizations/cost_report` | Admin key (`ANTHROPIC_ADMIN_KEY`) |
 | OpenAI | ✅ `GET /v1/organization/costs` | Admin key (`OPENAI_ADMIN_KEY`) |
-| xAI | ✅ `POST management-api.x.ai/v1/billing/teams/{team}/usage` | Management key + team id (`XAI_MANAGEMENT_KEY`, `XAI_TEAM_ID`) |
+| xAI | ✅ `POST management-api.x.ai/v1/billing/teams/{team}/usage` | Management key with BillingRead (`XAI_MANAGEMENT_KEY`); team id is looked up from the key unless `XAI_TEAM_ID` is set |
 | Google Gemini | — | Billing lives in Google Cloud; not readable with an API key |
 | Groq, Cerebras, Soniox | — | No public spend API found |
 | ElevenLabs | — | Subscription based; API reports characters, not spend |

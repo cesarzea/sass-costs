@@ -1,6 +1,7 @@
 import Foundation
 
-/// Reads spend from the xAI Management API. Requires a management key and the team id.
+/// Reads spend from the xAI Management API. Requires a management key with BillingRead;
+/// the team id is looked up from the key when not configured.
 struct XAICostFetcher: CostFetcher {
     enum Failure: LocalizedError {
         case truncated
@@ -12,25 +13,46 @@ struct XAICostFetcher: CostFetcher {
 
     let name = "xAI"
     let managementKey: String
-    let teamID: String
+    var teamID: String?
     var transport: any HTTPTransport = URLSessionTransport()
 
     func cost(for period: BillingPeriod) async throws -> Double {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "management-api.x.ai"
-        components.path = "/v1/billing/teams/\(teamID)/usage"
-
-        let headers = ["Authorization": "Bearer \(managementKey)", "Content-Type": "application/json"]
+        let team = try await resolvedTeamID()
         let body = try JSONEncoder().encode(XAIUsageRequest(period: period))
-        let data = try await transport.send(URLRequest(components, method: "POST", headers: headers, body: body))
+        let request = try URLRequest(endpoint("/v1/billing/teams/\(team)/usage"), method: "POST", headers: [
+            "Authorization": "Bearer \(managementKey)",
+            "Content-Type": "application/json"
+        ], body: body)
 
-        let report = try JSONDecoder().decode(XAIUsageReport.self, from: data)
+        let report = try JSONDecoder().decode(XAIUsageReport.self, from: try await transport.send(request))
         guard report.limitReached != true else {
             throw Failure.truncated
         }
         return report.totalUSD
     }
+
+    private func resolvedTeamID() async throws -> String {
+        if let teamID {
+            return teamID
+        }
+        let request = try URLRequest(
+            endpoint("/auth/management-keys/validation"),
+            headers: ["Authorization": "Bearer \(managementKey)"]
+        )
+        return try JSONDecoder().decode(XAIKeyInfo.self, from: try await transport.send(request)).teamId
+    }
+
+    private func endpoint(_ path: String) -> URLComponents {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "management-api.x.ai"
+        components.path = path
+        return components
+    }
+}
+
+struct XAIKeyInfo: Decodable {
+    let teamId: String
 }
 
 struct XAIUsageRequest: Encodable {

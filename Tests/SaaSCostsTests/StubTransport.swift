@@ -1,14 +1,19 @@
 import Foundation
 @testable import SaaSCosts
 
-/// Returns a canned body per `page` query value (`nil` key = first page) and records requests.
+/// Returns a canned body chosen by `respond`, and records every request.
 final class StubTransport: HTTPTransport, @unchecked Sendable {
-    private let pages: [String?: String]
+    private let respond: @Sendable (URLRequest) -> String?
     private let lock = NSLock()
     private var recorded: [URLRequest] = []
 
-    init(pages: [String?: String]) {
-        self.pages = pages
+    init(respond: @escaping @Sendable (URLRequest) -> String?) {
+        self.respond = respond
+    }
+
+    /// Bodies keyed by the `page` query value; `nil` is the first page.
+    convenience init(pages: [String?: String]) {
+        self.init { pages[$0.query("page")] }
     }
 
     var requests: [URLRequest] {
@@ -17,8 +22,7 @@ final class StubTransport: HTTPTransport, @unchecked Sendable {
 
     func send(_ request: URLRequest) async throws -> Data {
         lock.withLock { recorded.append(request) }
-        let page = request.query("page")
-        guard let body = pages[page] else {
+        guard let body = respond(request) else {
             throw HTTPError.status(404)
         }
         return Data(body.utf8)

@@ -37,6 +37,25 @@ final class XAICostFetcherTests: XCTestCase {
         XCTAssertEqual(range["timezone"], "Etc/GMT")
     }
 
+    func testLooksUpTeamFromKeyWhenNotConfigured() async throws {
+        let transport = StubTransport { request in
+            switch request.url?.path {
+            case "/auth/management-keys/validation":
+                return #"{"apiKeyId": "k", "teamId": "team-from-key", "acls": ["team-token:endpoint:BillingRead"]}"#
+            case "/v1/billing/teams/team-from-key/usage":
+                return #"{"timeSeries": [], "limitReached": false}"#
+            default:
+                return nil
+            }
+        }
+        let fetcher = XAICostFetcher(managementKey: "test", transport: transport)
+
+        let cost = try await fetcher.cost(for: period)
+
+        XCTAssertEqual(cost, 0)
+        XCTAssertEqual(transport.requests.map(\.httpMethod), ["GET", "POST"])
+    }
+
     func testTruncatedReportIsAnError() async {
         let transport = StubTransport(pages: [nil: #"{"timeSeries": [], "limitReached": true}"#])
         let fetcher = XAICostFetcher(managementKey: "test", teamID: "team-1", transport: transport)

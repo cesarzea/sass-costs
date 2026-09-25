@@ -38,11 +38,10 @@ enum ProviderCatalog {
             unavailable.append(ProviderResult(name: "OpenAI", status: .unavailable("Needs OPENAI_ADMIN_KEY")))
         }
 
-        if let key = value("XAI_MANAGEMENT_KEY"), let team = value("XAI_TEAM_ID") {
-            fetchers.append(XAICostFetcher(managementKey: key, teamID: team))
-        } else if value("GROK_API_KEY") != nil || value("XAI_MANAGEMENT_KEY") != nil {
-            let reason = "Needs XAI_MANAGEMENT_KEY + XAI_TEAM_ID"
-            unavailable.append(ProviderResult(name: "xAI", status: .unavailable(reason)))
+        if let key = value("XAI_MANAGEMENT_KEY") {
+            fetchers.append(XAICostFetcher(managementKey: key, teamID: value("XAI_TEAM_ID")))
+        } else if value("GROK_API_KEY") != nil {
+            unavailable.append(ProviderResult(name: "xAI", status: .unavailable("Needs XAI_MANAGEMENT_KEY")))
         }
 
         for provider in withoutCostAPI where value(provider.key) != nil {
