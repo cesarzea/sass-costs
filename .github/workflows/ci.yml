@@ -2,45 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
 
 jobs:
-  lint:
-    name: SwiftLint
+  check:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install SwiftLint
         run: brew install swiftlint
-      - name: Lint
-        run: swiftlint Sources/
-
-  build:
-    name: Build
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        swift-version: ['5.9', '5.10']
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set Swift Version
-        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-      - name: Build
-        run: swift build -v
-      - name: Build Release
-        run: swift build -c release -v
-
-  format:
-    name: Code Quality
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check file count
-        run: |
-          count=$(find Sources -name "*.swift" | wc -l)
-          echo "Swift files: $count"
-      - name: Check file sizes
-        run: |
-          find Sources -name "*.swift" -exec wc -l {} + | sort -n | tail -20
+      - name: Lint, build and test
+        run: make check

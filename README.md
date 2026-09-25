@@ -1,166 +1,66 @@
-# SaaS Costs Monitor - macOS Menu Bar App
+# SaaS Costs
 
-Monitor your LLM provider spending in real-time from the macOS menu bar. 💰
+macOS menu bar app that shows month-to-date spend on AI providers.
 
-A lightweight Swift app that displays aggregated costs from 8+ AI/LLM providers directly in your menu bar.
+The status item shows the total. The menu lists each provider:
 
-## Features
+- **amount** — spend since the 1st of the month (UTC), read from the provider's billing API
+- **Error** — the request failed (hover for the reason); a `⚠︎` is added to the total
+- **Needs …_ADMIN_KEY** / **No cost API** — a key exists but spend cannot be read with it
 
-- 🔄 **Real-time cost tracking** - Automatic refresh every hour
-- 📊 **Multi-provider support** - OpenAI, Anthropic, Google Gemini, Groq, Grok, Cerebras, ElevenLabs, Soniox
-- 🔐 **Secure** - Uses `.env.local`, never stores credentials
-- ⚡ **Fast** - Swift/AppKit, minimal resource usage
-- 🎨 **Native UI** - macOS menu bar integration
-- 📋 **Professional code** - SwiftLint validated, modular architecture
+Costs refresh on launch, every hour, and on *Refresh Now* (⌘R).
 
-## Architecture
+## Provider support
 
-```
-Sources/
-├── Core/
-│   ├── CostFetcher.swift       # Protocol for all providers
-│   ├── CostCoordinator.swift   # Orchestrates parallel fetching
-│   └── ProviderFactory.swift   # Auto-discovers enabled providers
-├── Providers/
-│   ├── AnthropicProvider.swift
-│   ├── OpenAIProvider.swift
-│   ├── GeminiProvider.swift
-│   ├── GroqProvider.swift
-│   ├── GrokProvider.swift
-│   ├── CerebrasProvider.swift
-│   ├── ElevenLabsProvider.swift
-│   └── SonioxProvider.swift
-├── UI/
-│   ├── AppDelegate.swift       # App lifecycle
-│   ├── MenuBarManager.swift    # Menu bar UI
-│   └── CostUpdater.swift       # Background refresh
-├── Utils/
-│   ├── EnvLoader.swift         # .env.local parser
-│   └── AppConfig.swift         # Configuration
-└── main.swift                  # Entry point
-```
-
-## Quick Start
-
-### Prerequisites
-- macOS 12.0+
-- Swift 5.9+
-- Xcode 15+ (for building .app bundle)
-
-### Setup
-
-1. **Clone and configure**
-   ```bash
-   git clone https://github.com/cesarzea/sass-costs.git
-   cd sass-costs
-   
-   # Copy your API keys to .env.local
-   cp .env.local.example .env.local  # Then add your keys
-   ```
-
-2. **Build**
-   ```bash
-   # Debug build
-   make build
-   
-   # Release build (optimized)
-   make release
-   ```
-
-3. **Create Xcode project** (for .app bundle)
-   - Open `Package.swift` in Xcode
-   - Create new target with Info.plist
-   - Copy `Info.plist` to project
-   - Build & run
-
-4. **Install**
-   Move `.app` to `/Applications`
+| Provider | Spend | Requirement |
+|----------|-------|-------------|
+| Anthropic | ✅ `GET /v1/organizations/cost_report` | Admin key (`ANTHROPIC_ADMIN_KEY`) |
+| OpenAI | ✅ `GET /v1/organization/costs` | Admin key (`OPENAI_ADMIN_KEY`) |
+| xAI | ✅ `POST management-api.x.ai/v1/billing/teams/{team}/usage` | Management key + team id (`XAI_MANAGEMENT_KEY`, `XAI_TEAM_ID`) |
+| Google Gemini | — | Billing lives in Google Cloud; not readable with an API key |
+| Groq, Cerebras, Soniox | — | No public spend API found |
+| ElevenLabs | — | Subscription based; API reports characters, not spend |
 
 ## Configuration
 
-Edit `.env.local` with your provider API keys:
+Keys are read from the first file found:
+
+1. `~/.config/sass-costs/.env` — for the installed app
+2. `./.env.local` in the working directory — for `make run` from the repository
+
+See [`.env.local.example`](.env.local.example). Keys are only sent to their own provider.
+
+## Build and run
+
+Requires macOS 12+, Xcode 15+ and [SwiftLint](https://github.com/realm/SwiftLint).
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-proj-...
-GEMINI_API_KEY=AIzaSy...
-GROQ_API_KEY=gsk_...
-GROK_API_KEY=xai-...
-CEREBRAS_API_KEY=csk-...
-ELEVEN_LABS_KEY=sk_...
-SONIOX_API_KEY=snx_...
+make check   # swiftlint --strict, warning-free build, tests
+make run     # builds .build/SaaSCosts.app and launches it from the repo
+make stop
 ```
 
-Only configured keys will be monitored.
+To install, copy `.build/SaaSCosts.app` to `/Applications` and put the keys in `~/.config/sass-costs/.env`.
 
-## Code Quality
+## Layout
 
-All code passes SwiftLint validation:
-
-```bash
-make lint
+```
+Sources/SaaSCosts/
+├── App.swift                  entry point and app delegate
+├── Core/                      CostFetcher protocol, billing period, parallel collection, HTTP
+├── Providers/                 one file per provider
+├── Config/                    .env parsing and provider selection
+└── UI/                        status item, menu, formatting
+Tests/SaaSCostsTests/          parsing, pagination, ordering, formatting
 ```
 
-Standards enforced:
-- Max 50 lines per function
-- Max 200 lines per file
-- Max 10 cyclomatic complexity
-- No force unwrapping
-- Proper naming conventions
+## Adding a provider
 
-## Provider Status
-
-| Provider | Status | Endpoint |
-|----------|--------|----------|
-| Anthropic | ✅ | `/v1/usage` |
-| OpenAI | ✅ | `/v1/dashboard/billing/usage` |
-| Google Gemini | ✅ | Cloud Billing API |
-| Groq | ✅ | `/billing/usage` |
-| Grok (xAI) | ✅ | `/v1/billing/usage` |
-| Cerebras | ✅ | `/v1/billing/usage` |
-| ElevenLabs | ✅ | `/v1/user` |
-| Soniox | ✅ | `/v1/billing` |
-
-## Development
-
-### Adding a New Provider
-
-1. Create `Sources/Providers/NewProvider.swift`
-2. Implement `CostFetcher` protocol
-3. Add to `ProviderFactory.swift`
-4. Test with real API key
-
-```swift
-struct NewProvider: CostFetcher {
-    let providerName = "Provider Name"
-    let apiKey: String?
-    
-    func fetchCost() async throws -> Double {
-        // Implementation
-    }
-}
-```
-
-### Testing
-
-```bash
-# Build debug version
-make build
-
-# Run with verbose output
-RUST_LOG=debug .build/debug/SaaS-Costs
-```
-
-## Maintenance
-
-- **SwiftLint**: Run before commits
-- **Dependencies**: Swift stdlib only, no external deps
-- **Versioning**: Follows semantic versioning
+1. Add `Sources/SaaSCosts/Providers/<Name>CostFetcher.swift` implementing `CostFetcher`
+   (`name` and `cost(for:) async throws -> Double` in USD). Use `HTTPGetting` for requests so it can be tested with a stub.
+2. Register it in `Config/ProviderCatalog.swift` and document its key in `.env.local.example`.
+3. Add a test with a recorded response, then run `make check`.
 
 ## License
 
-MIT - See LICENSE file
-
-## Support
-
-Issues & PRs welcome at https://github.com/cesarzea/sass-costs
+MIT

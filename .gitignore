@@ -1,24 +1,9 @@
-# Xcode
-build/
-*.pbxproj
-*.xcworkspace
-*.xcodeproj
-DerivedData/
-*.swiftpm
-
-# Swift
 .build/
-*.swiftmodule
-
-# Environment
-.env.local
-.env
-
-# macOS
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+DerivedData/
 .DS_Store
-*.app
 
-# IDE
-.vscode/
-*.swp
-*.swo
+.env
+.env.local

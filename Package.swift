@@ -2,21 +2,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "SaaS-Costs",
-    platforms: [
-        .macOS(.v12)
-    ],
-    products: [
-        .executable(name: "SaaS-Costs", targets: ["SaaS-Costs"])
-    ],
+    name: "SaaSCosts",
+    platforms: [.macOS(.v12)],
     targets: [
-        .executableTarget(
-            name: "SaaS-Costs",
-            dependencies: [],
-            path: "Sources",
-            linkerSettings: [
-                .linkedFramework("AppKit")
-            ]
-        )
+        .executableTarget(name: "SaaSCosts"),
+        .testTarget(name: "SaaSCostsTests", dependencies: ["SaaSCosts"])
     ]
 )

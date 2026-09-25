@@ -1,41 +1,34 @@
-EXECUTABLE := SaaS-Costs
-BUNDLE_ID := com.cesarzea.sass-costs
-BUILD_DIR := .build
-RELEASE_DIR := $(BUILD_DIR)/release
-APP_NAME := SaaS\ Costs\ Monitor
-INSTALL_PATH := /Applications
+APP := .build/SaaSCosts.app
+BIN := $(APP)/Contents/MacOS/SaaSCosts
 
-.PHONY: build release clean install lint help
+.PHONY: check lint build test app run stop clean
 
-help:
-	@echo "SaaS Costs Monitor - Makefile targets"
-	@echo ""
-	@echo "  make build      - Build debug executable"
-	@echo "  make release    - Build optimized release"
-	@echo "  make lint       - Run SwiftLint validation"
-	@echo "  make clean      - Remove build artifacts"
-	@echo "  make install    - Build and install to /Applications"
-	@echo "  make help       - Show this help message"
-
-build:
-	@echo "Building $(EXECUTABLE)..."
-	swift build -Xswiftc -suppress-warnings
-
-release:
-	@echo "Building optimized release..."
-	swift build -c release -Xswiftc -suppress-warnings
+## Gate for every commit: lint, warning-free build, tests.
+check: lint build test
 
 lint:
-	@echo "Running SwiftLint..."
-	swiftlint Sources/
+	swiftlint lint --strict --quiet
+
+build:
+	swift build -Xswiftc -warnings-as-errors
+
+test:
+	swift test -Xswiftc -warnings-as-errors
+
+app:
+	swift build -c release -Xswiftc -warnings-as-errors
+	rm -rf "$(APP)"
+	mkdir -p "$(APP)/Contents/MacOS"
+	cp .build/release/SaaSCosts "$(BIN)"
+	cp Info.plist "$(APP)/Contents/Info.plist"
+	codesign --force --sign - "$(APP)"
+
+## Launched from the repo root so ./.env.local is picked up as a fallback.
+run: app stop
+	nohup "$(BIN)" >/dev/null 2>&1 &
+
+stop:
+	-pkill -x SaaSCosts
 
 clean:
-	@echo "Cleaning build artifacts..."
-	rm -rf $(BUILD_DIR)
-	swift package clean
-
-install: release lint
-	@echo "Installing $(APP_NAME) to $(INSTALL_PATH)..."
-	@echo "Note: Run manually to create .app bundle in Xcode"
-
-.DEFAULT_GOAL := help
+	rm -rf .build

@@ -5,13 +5,13 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>SaaS-Costs</string>
+    <string>SaaSCosts</string>
     <key>CFBundleIdentifier</key>
     <string>com.cesarzea.sass-costs</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>SaaS Costs Monitor</string>
+    <string>SaaS Costs</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -20,11 +20,9 @@
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
-    <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
+    <key>LSUIElement</key>
+    <true/>
     <key>NSHighResolutionCapable</key>
     <true/>
-    <key>UIDeviceFamily</key>
-    <array/>
 </dict>
 </plist>
