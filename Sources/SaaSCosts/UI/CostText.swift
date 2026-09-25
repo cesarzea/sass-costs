@@ -12,10 +12,10 @@ enum CostText {
             }
             return nil
         }
-        guard !costs.isEmpty else {
-            return "–"
-        }
         let hasFailures = results.contains { if case .failed = $0.status { return true } else { return false } }
+        guard !costs.isEmpty else {
+            return hasFailures ? "⚠︎" : "–"
+        }
         let total = money(costs.reduce(0, +), locale: locale)
         return hasFailures ? "\(total) ⚠︎" : total
     }

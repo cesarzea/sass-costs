@@ -17,6 +17,8 @@ final class FormattingTests: XCTestCase {
             "$3.25 ⚠︎"
         )
         XCTAssertEqual(CostText.total(of: [], locale: locale), "–")
+        let onlyFailure = [ProviderResult(name: "E", status: .failed("HTTP 401"))]
+        XCTAssertEqual(CostText.total(of: onlyFailure, locale: locale), "⚠︎")
     }
 
     func testMonthToDateStartsAtUTCMonthBoundary() {
