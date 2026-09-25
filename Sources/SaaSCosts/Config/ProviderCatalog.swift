@@ -11,7 +11,6 @@ enum ProviderCatalog {
         ("Google Gemini", "GEMINI_API_KEY"),
         ("Groq", "GROQ_API_KEY"),
         ("Cerebras", "CEREBRAS_API_KEY"),
-        ("ElevenLabs", "ELEVEN_LABS_KEY"),
         ("Soniox", "SONIOX_API_KEY")
     ]
 
@@ -42,6 +41,10 @@ enum ProviderCatalog {
             fetchers.append(XAICostFetcher(managementKey: key, teamID: value("XAI_TEAM_ID")))
         } else if value("GROK_API_KEY") != nil {
             unavailable.append(ProviderResult(name: "xAI", status: .unavailable("Needs XAI_MANAGEMENT_KEY")))
+        }
+
+        if let key = value("ELEVEN_LABS_KEY") {
+            fetchers.append(ElevenLabsCostFetcher(apiKey: key))
         }
 
         for provider in withoutCostAPI where value(provider.key) != nil {

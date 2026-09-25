@@ -6,10 +6,11 @@ final class ProviderCatalogTests: XCTestCase {
         let setup = ProviderCatalog.setup(from: [
             "ANTHROPIC_ADMIN_KEY": "a",
             "OPENAI_ADMIN_KEY": "b",
-            "XAI_MANAGEMENT_KEY": "c"
+            "XAI_MANAGEMENT_KEY": "c",
+            "ELEVEN_LABS_KEY": "d"
         ])
 
-        XCTAssertEqual(setup.fetchers.map(\.name), ["Anthropic", "OpenAI", "xAI"])
+        XCTAssertEqual(setup.fetchers.map(\.name), ["Anthropic", "OpenAI", "xAI", "ElevenLabs"])
         XCTAssertTrue(setup.unavailable.isEmpty)
     }
 
