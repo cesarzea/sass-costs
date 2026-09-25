@@ -1,0 +1,38 @@
+disabled_rules:
+  - line_length
+  - trailing_whitespace
+  - conditional_returns_on_newline
+  - missing_docs
+  - todo
+
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - explicit_init
+  - extension_access_modifier
+  - joined_default_parameter
+  - let_var_whitespace
+  - operator_usage_whitespace
+  - overridden_super_call
+  - sorted_first_last
+  - sorted_imports
+  - unneeded_parentheses_in_closure_argument
+
+function_body_length: 50
+cyclomatic_complexity: 10
+file_length: 500
+type_body_length: 200
+function_parameter_count: 5
+identifier_name:
+  min_length: 2
+  max_length: 60
+  excluded:
+    - id
+    - x
+    - y
+    - z
+
+line_length: 120
