@@ -6,51 +6,58 @@ struct ProviderSetup {
 }
 
 enum ProviderCatalog {
-    /// Providers whose keys may be present but that expose no spend API usable with those keys.
+    private struct SpecialKey {
+        let name: String
+        let regularKey: String
+        let requiredKey: String
+    }
+
+    /// Providers whose regular key cannot read spend; the named key is required instead.
+    private static let needsSpecialKey = [
+        SpecialKey(name: "Anthropic", regularKey: "ANTHROPIC_API_KEY", requiredKey: "ANTHROPIC_ADMIN_KEY"),
+        SpecialKey(name: "OpenAI", regularKey: "OPENAI_API_KEY", requiredKey: "OPENAI_ADMIN_KEY"),
+        SpecialKey(name: "xAI", regularKey: "GROK_API_KEY", requiredKey: "XAI_MANAGEMENT_KEY")
+    ]
+
+    /// Providers whose keys may be present but that expose no spend API.
     private static let withoutCostAPI: [(name: String, key: String)] = [
         ("Google Gemini", "GEMINI_API_KEY"),
         ("Groq", "GROQ_API_KEY"),
-        ("Cerebras", "CEREBRAS_API_KEY"),
-        ("Soniox", "SONIOX_API_KEY")
+        ("Cerebras", "CEREBRAS_API_KEY")
     ]
 
     static func setup(from env: [String: String]) -> ProviderSetup {
-        func value(_ key: String) -> String? {
-            guard let value = env[key], !value.isEmpty else {
-                return nil
-            }
-            return value
-        }
+        let values = env.filter { !$0.value.isEmpty }
+        return ProviderSetup(fetchers: fetchers(from: values), unavailable: unavailable(from: values))
+    }
 
+    private static func fetchers(from env: [String: String]) -> [any CostFetcher] {
         var fetchers: [any CostFetcher] = []
-        var unavailable: [ProviderResult] = []
-
-        if let key = value("ANTHROPIC_ADMIN_KEY") {
+        if let key = env["ANTHROPIC_ADMIN_KEY"] {
             fetchers.append(AnthropicCostFetcher(adminKey: key))
-        } else if value("ANTHROPIC_API_KEY") != nil {
-            unavailable.append(ProviderResult(name: "Anthropic", status: .unavailable("Needs ANTHROPIC_ADMIN_KEY")))
         }
-
-        if let key = value("OPENAI_ADMIN_KEY") {
+        if let key = env["OPENAI_ADMIN_KEY"] {
             fetchers.append(OpenAICostFetcher(adminKey: key))
-        } else if value("OPENAI_API_KEY") != nil {
-            unavailable.append(ProviderResult(name: "OpenAI", status: .unavailable("Needs OPENAI_ADMIN_KEY")))
         }
-
-        if let key = value("XAI_MANAGEMENT_KEY") {
-            fetchers.append(XAICostFetcher(managementKey: key, teamID: value("XAI_TEAM_ID")))
-        } else if value("GROK_API_KEY") != nil {
-            unavailable.append(ProviderResult(name: "xAI", status: .unavailable("Needs XAI_MANAGEMENT_KEY")))
+        if let key = env["XAI_MANAGEMENT_KEY"] {
+            fetchers.append(XAICostFetcher(managementKey: key, teamID: env["XAI_TEAM_ID"]))
         }
-
-        if let key = value("ELEVEN_LABS_KEY") {
+        if let key = env["ELEVEN_LABS_KEY"] {
             fetchers.append(ElevenLabsCostFetcher(apiKey: key))
         }
-
-        for provider in withoutCostAPI where value(provider.key) != nil {
-            unavailable.append(ProviderResult(name: provider.name, status: .unavailable("No cost API")))
+        if let key = env["SONIOX_API_KEY"] {
+            fetchers.append(SonioxCostFetcher(apiKey: key))
         }
+        return fetchers
+    }
 
-        return ProviderSetup(fetchers: fetchers, unavailable: unavailable)
+    private static func unavailable(from env: [String: String]) -> [ProviderResult] {
+        let missingKey = needsSpecialKey
+            .filter { env[$0.regularKey] != nil && env[$0.requiredKey] == nil }
+            .map { ProviderResult(name: $0.name, status: .unavailable("Needs \($0.requiredKey)")) }
+        let noAPI = withoutCostAPI
+            .filter { env[$0.key] != nil }
+            .map { ProviderResult(name: $0.name, status: .unavailable("No cost API")) }
+        return missingKey + noAPI
     }
 }

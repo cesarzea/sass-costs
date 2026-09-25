@@ -7,10 +7,11 @@ final class ProviderCatalogTests: XCTestCase {
             "ANTHROPIC_ADMIN_KEY": "a",
             "OPENAI_ADMIN_KEY": "b",
             "XAI_MANAGEMENT_KEY": "c",
-            "ELEVEN_LABS_KEY": "d"
+            "ELEVEN_LABS_KEY": "d",
+            "SONIOX_API_KEY": "e"
         ])
 
-        XCTAssertEqual(setup.fetchers.map(\.name), ["Anthropic", "OpenAI", "xAI", "ElevenLabs"])
+        XCTAssertEqual(setup.fetchers.map(\.name), ["Anthropic", "OpenAI", "xAI", "ElevenLabs", "Soniox"])
         XCTAssertTrue(setup.unavailable.isEmpty)
     }
 

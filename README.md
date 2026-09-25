@@ -20,8 +20,9 @@ Anthropic's cost report only contains completed UTC days, so the current day app
 | OpenAI | ✅ `GET /v1/organization/costs` | Admin key (`OPENAI_ADMIN_KEY`) |
 | xAI | ✅ `POST management-api.x.ai/v1/billing/teams/{team}/usage` | Management key with BillingRead (`XAI_MANAGEMENT_KEY`); team id is looked up from the key unless `XAI_TEAM_ID` is set |
 | ElevenLabs | ✅ `POST /v1/workspace/analytics/query/usage-by-product-over-time` | API key (`ELEVEN_LABS_KEY`); metered usage only, the plan fee is not included |
+| Soniox | ✅ `GET /v1/usage/summary` | API key (`SONIOX_API_KEY`) |
 | Google Gemini | — | Billing lives in Google Cloud; not readable with an API key |
-| Groq, Cerebras, Soniox | — | No public spend API found |
+| Groq, Cerebras | — | No public spend API found |
 
 ## Configuration
 
