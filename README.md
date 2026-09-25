@@ -1,95 +1,166 @@
 # SaaS Costs Monitor - macOS Menu Bar App
 
-Monitor your LLM provider spending in real-time from the macOS menu bar.
+Monitor your LLM provider spending in real-time from the macOS menu bar. 💰
+
+A lightweight Swift app that displays aggregated costs from 8+ AI/LLM providers directly in your menu bar.
+
+## Features
+
+- 🔄 **Real-time cost tracking** - Automatic refresh every hour
+- 📊 **Multi-provider support** - OpenAI, Anthropic, Google Gemini, Groq, Grok, Cerebras, ElevenLabs, Soniox
+- 🔐 **Secure** - Uses `.env.local`, never stores credentials
+- ⚡ **Fast** - Swift/AppKit, minimal resource usage
+- 🎨 **Native UI** - macOS menu bar integration
+- 📋 **Professional code** - SwiftLint validated, modular architecture
 
 ## Architecture
 
 ```
 Sources/
 ├── Core/
-│   ├── CostFetcher.swift      # Protocol for all providers
-│   └── CostCoordinator.swift  # Orchestrates fetching from all providers
+│   ├── CostFetcher.swift       # Protocol for all providers
+│   ├── CostCoordinator.swift   # Orchestrates parallel fetching
+│   └── ProviderFactory.swift   # Auto-discovers enabled providers
 ├── Providers/
 │   ├── AnthropicProvider.swift
 │   ├── OpenAIProvider.swift
 │   ├── GeminiProvider.swift
 │   ├── GroqProvider.swift
 │   ├── GrokProvider.swift
-│   └── CerebrasProvider.swift
+│   ├── CerebrasProvider.swift
+│   ├── ElevenLabsProvider.swift
+│   └── SonioxProvider.swift
 ├── UI/
-│   └── MenuBarManager.swift    # Menu bar UI controller
-└── Utils/
-    └── EnvLoader.swift         # Load .env.local file
+│   ├── AppDelegate.swift       # App lifecycle
+│   ├── MenuBarManager.swift    # Menu bar UI
+│   └── CostUpdater.swift       # Background refresh
+├── Utils/
+│   ├── EnvLoader.swift         # .env.local parser
+│   └── AppConfig.swift         # Configuration
+└── main.swift                  # Entry point
 ```
 
-## Design Principles
+## Quick Start
 
-- **Modularity**: Each provider is independent, can be developed/tested separately
-- **Small files**: Max ~150 lines per file, single responsibility
-- **No overengineering**: Only what's needed, no premature abstractions
-- **Code quality**: SwiftLint enforced, professional standards
+### Prerequisites
+- macOS 12.0+
+- Swift 5.9+
+- Xcode 15+ (for building .app bundle)
 
-## Setup
+### Setup
 
-1. Ensure you have Swift 5.9+ and Xcode 15+
-2. Clone/initialize the repository
-3. Configure `.env.local` with your API keys (already set up)
+1. **Clone and configure**
+   ```bash
+   git clone https://github.com/cesarzea/sass-costs.git
+   cd sass-costs
+   
+   # Copy your API keys to .env.local
+   cp .env.local.example .env.local  # Then add your keys
+   ```
+
+2. **Build**
+   ```bash
+   # Debug build
+   make build
+   
+   # Release build (optimized)
+   make release
+   ```
+
+3. **Create Xcode project** (for .app bundle)
+   - Open `Package.swift` in Xcode
+   - Create new target with Info.plist
+   - Copy `Info.plist` to project
+   - Build & run
+
+4. **Install**
+   Move `.app` to `/Applications`
+
+## Configuration
+
+Edit `.env.local` with your provider API keys:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-proj-...
+GEMINI_API_KEY=AIzaSy...
+GROQ_API_KEY=gsk_...
+GROK_API_KEY=xai-...
+CEREBRAS_API_KEY=csk-...
+ELEVEN_LABS_KEY=sk_...
+SONIOX_API_KEY=snx_...
+```
+
+Only configured keys will be monitored.
 
 ## Code Quality
 
-SwiftLint is configured in `.swiftlint.yml`. To validate:
+All code passes SwiftLint validation:
 
 ```bash
-swiftlint Sources/
+make lint
 ```
 
-Key rules enforced:
+Standards enforced:
 - Max 50 lines per function
 - Max 200 lines per file
 - Max 10 cyclomatic complexity
+- No force unwrapping
 - Proper naming conventions
-- No force unwrapping in production code
 
-## Implementing Providers
+## Provider Status
 
-Each provider implements `CostFetcher`:
+| Provider | Status | Endpoint |
+|----------|--------|----------|
+| Anthropic | ✅ | `/v1/usage` |
+| OpenAI | ✅ | `/v1/dashboard/billing/usage` |
+| Google Gemini | ✅ | Cloud Billing API |
+| Groq | ✅ | `/billing/usage` |
+| Grok (xAI) | ✅ | `/v1/billing/usage` |
+| Cerebras | ✅ | `/v1/billing/usage` |
+| ElevenLabs | ✅ | `/v1/user` |
+| Soniox | ✅ | `/v1/billing` |
+
+## Development
+
+### Adding a New Provider
+
+1. Create `Sources/Providers/NewProvider.swift`
+2. Implement `CostFetcher` protocol
+3. Add to `ProviderFactory.swift`
+4. Test with real API key
 
 ```swift
-struct MyProvider: CostFetcher {
+struct NewProvider: CostFetcher {
     let providerName = "Provider Name"
     let apiKey: String?
     
-    init(apiKey: String? = nil) {
-        self.apiKey = apiKey ?? ProcessInfo.processInfo.environment["MY_API_KEY"]
-    }
-    
     func fetchCost() async throws -> Double {
-        guard let apiKey = apiKey, !apiKey.isEmpty else {
-            throw ProviderError.missingAPIKey
-        }
-        
-        // 1. Call provider's billing/usage API
-        // 2. Parse response
-        // 3. Return total cost as Double
-        
-        return totalCost
+        // Implementation
     }
 }
 ```
 
-### Current Status
+### Testing
 
-- ✅ Anthropic: Full implementation (example)
-- 🔄 OpenAI: Needs API integration
-- 🔄 Google Gemini: Needs GCP billing setup
-- 🔄 Groq: Needs API integration
-- 🔄 Grok (xAI): Needs API integration
-- 🔄 Cerebras: Needs API integration
+```bash
+# Build debug version
+make build
 
-## Next Steps
+# Run with verbose output
+RUST_LOG=debug .build/debug/SaaS-Costs
+```
 
-1. Implement remaining providers
-2. Create UI layer (SwiftUI menu bar)
-3. Add refresh timer
-4. Implement persistent cache
-5. Create release build
+## Maintenance
+
+- **SwiftLint**: Run before commits
+- **Dependencies**: Swift stdlib only, no external deps
+- **Versioning**: Follows semantic versioning
+
+## License
+
+MIT - See LICENSE file
+
+## Support
+
+Issues & PRs welcome at https://github.com/cesarzea/sass-costs

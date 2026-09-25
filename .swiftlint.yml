@@ -4,6 +4,8 @@ disabled_rules:
   - conditional_returns_on_newline
   - missing_docs
   - todo
+  - sorted_imports
+  - attributes
 
 opt_in_rules:
   - array_init
