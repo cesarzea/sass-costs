@@ -13,7 +13,30 @@ struct CerebrasProvider: CostFetcher {
             throw ProviderError.missingAPIKey
         }
 
-        // TODO: Implement Cerebras billing API
-        return 0.0
+        let url = URL(string: "https://api.cerebras.ai/v1/billing/usage")!
+
+        var request = URLRequest(url: url)
+        request.setValue("Authorization: Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw ProviderError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let usage = try decoder.decode(CerebrasUsage.self, from: data)
+        return usage.totalCost
     }
+}
+
+private struct CerebrasUsage: Codable {
+    let totalCost: Double
+
+    enum CodingKeys: String, CodingKey {
+        case totalCost = "total_cost"
+    }
+}
 }

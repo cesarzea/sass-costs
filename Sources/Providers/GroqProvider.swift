@@ -13,7 +13,30 @@ struct GroqProvider: CostFetcher {
             throw ProviderError.missingAPIKey
         }
 
-        // TODO: Implement Groq billing API
-        return 0.0
+        let url = URL(string: "https://api.groq.com/billing/usage")!
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw ProviderError.invalidResponse
+        }
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let usage = try decoder.decode(GroqUsage.self, from: data)
+        return usage.totalCost
     }
+}
+
+private struct GroqUsage: Codable {
+    let totalCost: Double
+
+    enum CodingKeys: String, CodingKey {
+        case totalCost = "total_cost"
+    }
+}
 }

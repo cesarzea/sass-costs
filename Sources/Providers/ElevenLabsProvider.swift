@@ -1,11 +1,11 @@
 import Foundation
 
-struct GrokProvider: CostFetcher {
-    let providerName = "Grok (xAI)"
+struct ElevenLabsProvider: CostFetcher {
+    let providerName = "ElevenLabs"
     let apiKey: String?
 
     init(apiKey: String? = nil) {
-        self.apiKey = apiKey ?? ProcessInfo.processInfo.environment["GROK_API_KEY"]
+        self.apiKey = apiKey ?? ProcessInfo.processInfo.environment["ELEVEN_LABS_KEY"]
     }
 
     func fetchCost() async throws -> Double {
@@ -13,10 +13,10 @@ struct GrokProvider: CostFetcher {
             throw ProviderError.missingAPIKey
         }
 
-        let url = URL(string: "https://api.x.ai/v1/billing/usage")!
+        let url = URL(string: "https://api.elevenlabs.io/v1/user")!
 
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -27,16 +27,19 @@ struct GrokProvider: CostFetcher {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
 
-        let usage = try decoder.decode(GrokUsage.self, from: data)
-        return usage.totalCost
+        let user = try decoder.decode(ElevenLabsUser.self, from: data)
+        return user.subscription.billedAmount
     }
 }
 
-private struct GrokUsage: Codable {
-    let totalCost: Double
+private struct ElevenLabsUser: Codable {
+    let subscription: ElevenLabsSubscription
+}
+
+private struct ElevenLabsSubscription: Codable {
+    let billedAmount: Double
 
     enum CodingKeys: String, CodingKey {
-        case totalCost = "total_cost"
+        case billedAmount = "billed_amount"
     }
-}
 }

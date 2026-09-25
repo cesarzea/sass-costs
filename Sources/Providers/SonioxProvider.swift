@@ -1,11 +1,11 @@
 import Foundation
 
-struct GrokProvider: CostFetcher {
-    let providerName = "Grok (xAI)"
+struct SonioxProvider: CostFetcher {
+    let providerName = "Soniox"
     let apiKey: String?
 
     init(apiKey: String? = nil) {
-        self.apiKey = apiKey ?? ProcessInfo.processInfo.environment["GROK_API_KEY"]
+        self.apiKey = apiKey ?? ProcessInfo.processInfo.environment["SONIOX_API_KEY"]
     }
 
     func fetchCost() async throws -> Double {
@@ -13,7 +13,7 @@ struct GrokProvider: CostFetcher {
             throw ProviderError.missingAPIKey
         }
 
-        let url = URL(string: "https://api.x.ai/v1/billing/usage")!
+        let url = URL(string: "https://api.soniox.com/v1/billing")!
 
         var request = URLRequest(url: url)
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -27,16 +27,15 @@ struct GrokProvider: CostFetcher {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
 
-        let usage = try decoder.decode(GrokUsage.self, from: data)
-        return usage.totalCost
+        let billing = try decoder.decode(SonioxBilling.self, from: data)
+        return billing.totalCost
     }
 }
 
-private struct GrokUsage: Codable {
+private struct SonioxBilling: Codable {
     let totalCost: Double
 
     enum CodingKeys: String, CodingKey {
         case totalCost = "total_cost"
     }
-}
 }
