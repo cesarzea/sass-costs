@@ -10,6 +10,8 @@ The status item shows the total. The menu lists each provider:
 
 Costs refresh on launch, every hour, and on *Refresh Now* (⌘R).
 
+Anthropic's cost report only contains completed UTC days, so the current day appears after midnight UTC.
+
 ## Provider support
 
 | Provider | Spend | Requirement |
