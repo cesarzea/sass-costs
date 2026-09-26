@@ -19,6 +19,8 @@ final class FormattingTests: XCTestCase {
         XCTAssertEqual(CostText.total(of: [], locale: locale), "–")
         let onlyFailure = [ProviderResult(name: "E", status: .failed("HTTP 401"))]
         XCTAssertEqual(CostText.total(of: onlyFailure, locale: locale), "⚠︎")
+        XCTAssertTrue(CostText.hasFailures(onlyFailure))
+        XCTAssertFalse(CostText.hasFailures(results))
     }
 
     func testMonthToDateStartsAtUTCMonthBoundary() {

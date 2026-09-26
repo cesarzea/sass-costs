@@ -49,7 +49,15 @@ final class StatusBarController: NSObject {
     }
 
     private func render() {
-        statusItem.button?.title = isRefreshing && lastUpdated == nil ? "…" : CostText.total(of: results)
+        let title = isRefreshing && lastUpdated == nil ? "…" : CostText.total(of: results)
+        if CostText.hasFailures(results) {
+            statusItem.button?.attributedTitle = NSAttributedString(
+                string: title,
+                attributes: [.foregroundColor: NSColor.systemRed, .font: NSFont.menuBarFont(ofSize: 0)]
+            )
+        } else {
+            statusItem.button?.title = title
+        }
         statusItem.menu = MenuBuilder(
             results: results,
             period: period,

@@ -5,6 +5,10 @@ enum CostText {
         value.formatted(.currency(code: "USD").locale(locale))
     }
 
+    static func hasFailures(_ results: [ProviderResult]) -> Bool {
+        results.contains { if case .failed = $0.status { return true } else { return false } }
+    }
+
     static func total(of results: [ProviderResult], locale: Locale = .current) -> String {
         let costs = results.compactMap { result -> Double? in
             if case .cost(let value) = result.status {
@@ -12,7 +16,7 @@ enum CostText {
             }
             return nil
         }
-        let hasFailures = results.contains { if case .failed = $0.status { return true } else { return false } }
+        let hasFailures = hasFailures(results)
         guard !costs.isEmpty else {
             return hasFailures ? "⚠︎" : "–"
         }
