@@ -2,6 +2,11 @@
 
 macOS menu bar app that shows month-to-date spend on AI providers.
 
+> **Status: work in progress.** This app is becoming the menu bar companion of
+> [Catón AI](https://github.com/cesarzea/caton-ai), a local-first financial watchdog: instead of
+> collecting spend on its own, it will show the figures Catón AI already stores on this computer.
+> Until then it reads each provider's billing API directly, as described below.
+
 The status item shows the total. The menu lists each provider:
 
 - **amount** — spend since the 1st of the month (UTC), read from the provider's billing API
